@@ -822,6 +822,13 @@ class SigniteRequest {
         }
         return null;
     }
+
+    public function getFile($key) {
+        if (isset($_FILES[$key])) {
+            return $_FILES[$key];
+        }
+        return null;
+    }
 }
 
 class SigniteResponse {

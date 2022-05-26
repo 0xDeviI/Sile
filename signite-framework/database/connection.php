@@ -16,6 +16,11 @@ $connection = new MYSQL_Util($_HOST, $_USERNAME, $_PASSWORD, $_DATABASE, [
         new Column("id", "varchar", 36, false, true, false),
         new Column("username", "varchar", 16, false, false, false),
         new Column("password", "text", 255, false, false, false)
+    ]),
+    new Table("Files", [
+        new Column("id", "varchar", 36, false, true, false),
+        new Column("realFile", "text", 255, false, false, false),
+        new Column("password", "text", 255, false, false, false)
     ])
 ]);
 

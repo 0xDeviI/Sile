@@ -30,7 +30,10 @@ class IsLoggedIn {
                 else {
                     return $this->showLogin();
                 }
-            }   
+            }
+            else {
+                return $this->showLogin();
+            }
         }
         else {
             return $this->showLogin();

@@ -97,6 +97,59 @@ let user_login = {
     }
 }
 
+let file_upload = {
+    'file': document.getElementById('file'),
+    'upload_btn': document.getElementById('upload_btn'),
+    'file_upload_text': document.getElementById('file_upload_text'),
+    'upload': () => {
+        if (file_upload.isAllowedToUpload()) {
+            var file_data = file_upload.file.files[0];
+            var form_data = new FormData();
+            form_data.append('file', file_data);
+            $.ajax({
+                url: '/api/v1/file/upload',
+                type: 'POST',
+                cache: false,
+                contentType: false,
+                processData: false,
+                data: form_data,
+                success: (data) => {
+                    if (data.status === 'success') {
+                        notify('Success', 'You have successfully uploaded a file.', 2000);
+                        file_upload.clearFields();
+                        setTimeout(() => {
+                            window.location.href = '/';
+                        }, 2000);
+                    } else {
+                        notify('Error', data.message, 2000);
+                    }
+                },
+                error: (data) => {
+                    if (data.responseText)
+                        notify('Error', data.responseText, 2000);
+                    else
+                        notify('Error', 'Something went wrong.', 2000);
+                }
+            });
+        }
+    },
+    'isAllowedToUpload': () => {
+        return file_upload.file.files[0] !== undefined;
+    },
+    'clearFields': () => {
+        file_upload.file.value = '';
+    },
+    'fileUploadChange': () => {
+        console.log(file_upload.file.files[0]);
+        if (file_upload.file.files[0]) {
+            file_upload.file_upload_text.innerHTML = file_upload.file.files[0].name;
+            file_upload.upload_btn.disabled = false;
+        } else {
+            file_upload.upload_btn.disabled = true;
+        }
+    }
+}
+
 function login() {
     if (user_login.isValidUsername()) {
         if (user_login.isValidPassword()) {
@@ -125,12 +178,25 @@ function register() {
     }
 }
 
+function upload() {
+    if (file_upload.isAllowedToUpload()) {
+        file_upload.upload();
+    } else {
+        notify("Error", "File is not selected or not valid.", 3000);
+    }
+}
+
 function eventListenerSetup() {
     if (user_login.login_btn) {
         user_login.login_btn.addEventListener('click', login);
     }
     if (user_register.register_btn) {
         user_register.register_btn.addEventListener('click', register);
+    }
+    if (file_upload.upload_btn) {
+        file_upload.upload_btn.disabled = true;
+        file_upload.file.addEventListener('change', file_upload.fileUploadChange);
+        file_upload.upload_btn.addEventListener('click', upload);
     }
 }
 

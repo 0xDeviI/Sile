@@ -32,7 +32,10 @@ class IsNotLoggedIn {
                 else {
                     return new MiddlewareResult($this::class, true, "user not logged in.");
                 }
-            }   
+            }
+            else {
+                return new MiddlewareResult($this::class, true, "user not logged in.");
+            }
         }
         else {
             return new MiddlewareResult($this::class, true, "user not logged in.");

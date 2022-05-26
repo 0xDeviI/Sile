@@ -20,6 +20,10 @@ $app->route("/api/v1/user/login",
     "UserController@login", 
     "POST")->middleware("SafePostRequest");
 
+$app->route("/api/v1/file/upload", 
+    "FileController@upload", 
+    "POST")->middleware("SafeFileUpload", true);
+
 // Frontend Routes
 $app->route("/", "HomeController", "GET")->middleware("IsLoggedIn", true);
 $app->route("/login", "LoginController", "GET")->middleware("IsNotLoggedIn", true);

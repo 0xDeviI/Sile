@@ -26,8 +26,8 @@ $favIcon = "{{favicon}}";
         <div class="upload-box">
             <div class="upload-form">
                 <div class="upload-stuff">
-                    <p>Click in this area to select a file.</p>
-                    <button type="submit" class="btn btn-primary w120 upload-btn" name="submit">Upload</button>
+                    <p id="file_upload_text">Click in this area to select a file.</p>
+                    <button id="upload_btn" type="button" class="btn btn-primary w120 upload-btn" name="submit">Upload</button>
                 </div>
                 <input class="upload-input" type="file" name="file" id="file">
             </div>
@@ -35,6 +35,9 @@ $favIcon = "{{favicon}}";
     </div>
     <h2>Files</h2>
     <p>Here you can find all files uploaded by you.</p>
+    <script src="/{{application_name}}/resources/js/UUID.js"></script>
+    <script src="/{{application_name}}/resources/js/Notification.js"></script>
+    <script src="/{{application_name}}/resources/js/Application.js"></script>
 </body>
 
 </html>
