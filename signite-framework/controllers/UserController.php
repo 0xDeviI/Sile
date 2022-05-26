@@ -143,7 +143,68 @@ class UserController {
     }
 
     public function update(SigniteRequest $request, $id) {
-        //
+        $username = $request->get("username");
+        $password = $request->get("password");
+        if ($username == null || $password == null || $id == null) {
+            return response(400, "Invalid request");
+        }
+        else {
+            $validated = Validity::isValidUsername($username) && Validity::isValidPassword($password);
+            if ($validated) {
+                $user = new User($id, $username, $password, $this->db);
+                if ($user->getUsername() !== $_SESSION["user"]["username"]) {
+                    if ($this->isUserExist($user)) {
+                        return response(200, [
+                            'status' => 'error',
+                            'message' => 'User already exist'
+                        ])->json();
+                    } else {
+                        $password = Security::generatePasswordHash($password);
+                        $query = 'UPDATE users SET username = "' . $user->getUsername() . '", password = "' . $password . '" WHERE id = "' . $user->getId() . '"';
+                        $result = $this->db->query($query);
+                        if ($result) {
+                            $_SESSION["user"]["username"] = $user->getUsername();
+                            $_SESSION["user"]["password"] = $request->get("password");
+                            $_SESSION["JWT"] = Security::generateJWT($_SESSION["user"]);
+                            return response(201, [
+                                'status' => 'success',
+                                'message' => 'User updated successfully'
+                            ])->json();
+                        } else {
+                            return response(200, [
+                                'status' => 'error',
+                                'message' => 'User update failed'
+                            ])->json();
+                        }
+                    }
+                }
+                else {
+                    $password = Security::generatePasswordHash($password);
+                    $query = 'UPDATE users SET username = "' . $user->getUsername() . '", password = "' . $password . '" WHERE id = "' . $user->getId() . '"';
+                    $result = $this->db->query($query);
+                    if ($result) {
+                        $_SESSION["user"]["username"] = $user->getUsername();
+                        $_SESSION["user"]["password"] = $request->get("password");
+                        $_SESSION["JWT"] = Security::generateJWT($_SESSION["user"]);
+                        return response(201, [
+                            'status' => 'success',
+                            'message' => 'User updated successfully'
+                        ])->json();
+                    } else {
+                        return response(200, [
+                            'status' => 'error',
+                            'message' => 'User update failed'
+                        ])->json();
+                    }
+                }
+            }
+            else {
+                return response(200, [
+                    'status' => 'error',
+                    'message' => 'Invalid request'
+                ])->json();
+            }
+        }
     }
 
     public function destroy($id) {

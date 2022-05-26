@@ -1,8 +1,10 @@
 <?php
 
 require_once "signite-framework/core/core.php";
+require_once "signite-framework/core/HelperFunctions.php";
 
 use Signite\Core\Signite;
+use function Signite\Core\response;
 
 class LogoutController {
     
@@ -15,7 +17,7 @@ class LogoutController {
 
     public function __invoke() {
         session_destroy();
-        $this->_signiteApp->redirect("/");
+        response()->redirect("/login");
     }
 
 }

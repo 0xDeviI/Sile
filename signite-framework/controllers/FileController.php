@@ -44,11 +44,11 @@ class FileController {
         $fileTmpName = $file["tmp_name"];
         $fileName = $this->_uploadPath . Identifier::uniqueFileName() . "." . $fileExtension;
         if (move_uploaded_file($fileTmpName, $fileName)) {
-            $file = new File("", $fileName, "", $this->db);
+            $file = new File("", $fileName, "", $request->get("id"), $this->db);
             while ($this->isFileExist($file) !== null) {
                 $file->reId();
             }
-            $query = 'INSERT INTO files (id, realFile, password) VALUES ("' . $file->getId() . '", "' . $file->getRealFile() . '", "' . $file->getHashedPassword() . '")';
+            $query = 'INSERT INTO files (id, realFile, password, ownerId) VALUES ("' . $file->getId() . '", "' . $file->getRealFile() . '", "' . $file->getHashedPassword() . '", "' . $file->getOwnerId() . '")';
             $result = $this->db->query($query);
             if ($result) {
                 return response(200, [
@@ -63,6 +63,43 @@ class FileController {
         }
         else {
             return response(400, "File upload failed.")->json();
+        }
+    }
+
+    public function deleteAll(SigniteRequest $request) {
+        $ownerId = $request->get("id");
+        $query = 'SELECT * FROM files WHERE ownerId = "' . $ownerId . '"';
+        $result = $this->db->query($query);
+        if ($result) {
+            $_result = true;
+            // access all rows
+            while ($row = $result->fetch_assoc()) {
+                $query = 'DELETE FROM files WHERE id = "' . $row["id"] . '"';
+                $resultx = $this->db->query($query);
+                if (!$resultx)
+                    $_result = false;
+                else {
+                    unlink($row["realFile"]);
+                }
+            }
+            if ($_result) {
+                return response(200, [
+                    "status" => 'success', 
+                    "message" => 'All files deleted successfully',
+                ])->json();
+            }
+            else {
+                return response(200,  [
+                    "status" => 'error', 
+                    "message" => 'All files deletion failed',
+                ])->json();
+            }
+        }
+        else {
+            return response(400, [
+                "status" => 'error', 
+                "message" => "File deletion failed.",
+            ])->json();
         }
     }
 }

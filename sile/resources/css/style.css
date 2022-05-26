@@ -504,6 +504,12 @@ button.btn-danger {
     background-color: var(--danger) !important;
 }
 
+button.btn-danger-outbox {
+    color: var(--form-text) !important;
+    background-color: transparent !important;
+    border: 1px solid var(--danger) !important;
+}
+
 button.btn-warning {
     color: var(--form-text) !important;
     background-color: var(--warning) !important;
@@ -1197,7 +1203,7 @@ thead {
 @media (prefers-color-scheme:dark) {
     thead {
         border-bottom: 1px solid #526980;
-        border-bottom: 1px solid var(--border)
+        border-bottom: 1px solid var(--primary-darker)
     }
 }
 
@@ -1213,15 +1219,9 @@ tfoot {
     }
 }
 
-tbody tr:nth-child(even) {
-    background-color: #f7f7f7;
-    background-color: var(--background-alt)
-}
-
 @media (prefers-color-scheme:dark) {
     tbody tr:nth-child(even) {
-        background-color: #1a242f;
-        background-color: var(--background-alt)
+        background-color: #23272a;
     }
 }
 
@@ -1480,6 +1480,11 @@ button.btn-success:hover {
     background-color: var(--success-darker) !important;
 }
 
+button.btn-danger-outbox:hover {
+    background-color: var(--danger) !important;
+    border: 0px !important;
+}
+
 .login-form {
     position: absolute;
     top: 50%;
@@ -1721,4 +1726,61 @@ button.btn.upload-btn {
     display: flex;
     justify-content: center;
     align-items: center;
+}
+
+.file-table {
+    margin: 0;
+    padding: 0;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    border-spacing: 0;
+    border: 1px solid var(--primary);
+}
+
+thead {
+    background-color: var(--primary);
+    color: var(--white);
+    font-weight: bold;
+    font-size: 16px;
+}
+
+.center-settings {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+ul.header-menu {
+    display: flex;
+    justify-content: left;
+    align-items: center;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+li.header-element {
+    margin-right: 20px;
+}
+
+.center-dzone {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+}
+
+.top-right {
+    position: absolute;
+    top: 0;
+    right: 0;
+    margin: 30px;
+}
+
+.bold-text {
+    font-weight: bold;
 }

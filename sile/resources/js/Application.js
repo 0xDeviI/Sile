@@ -101,13 +101,15 @@ let file_upload = {
     'file': document.getElementById('file'),
     'upload_btn': document.getElementById('upload_btn'),
     'file_upload_text': document.getElementById('file_upload_text'),
+    'account_id': document.getElementById('account_id'),
     'upload': () => {
         if (file_upload.isAllowedToUpload()) {
             var file_data = file_upload.file.files[0];
             var form_data = new FormData();
             form_data.append('file', file_data);
+            form_data.append('id', file_upload.account_id.value.toLowerCase());
             $.ajax({
-                url: '/api/v1/file/upload',
+                url: '/api/v1/files/upload',
                 type: 'POST',
                 cache: false,
                 contentType: false,
@@ -150,6 +152,115 @@ let file_upload = {
     }
 }
 
+let dashboard = {
+    'settings_close_btn': document.getElementById('settings_close_btn'),
+    'dashboard': document.getElementById('dashboard'),
+    'settings': document.getElementById('settings'),
+    'change_settings_btn': document.getElementById('change_settings_btn'),
+    'username': document.getElementById('username'),
+    'password': document.getElementById('password'),
+    'account_id': document.getElementById('account_id'),
+    'delete_all_files': document.getElementById('delete_all_files'),
+    'delete_account': document.getElementById('delete_account'),
+    'logout': document.getElementById('logout'),
+    'change_settings': () => {
+        if (dashboard.isAllowedToChangeSettings()) {
+            $.ajax({
+                url: '/api/v1/user/change_settings',
+                type: 'POST',
+                headers: {
+                    'Authorization': 'Bearer ' + localStorage.getItem('token')
+                },
+                data: {
+                    'id': dashboard.account_id.value.toLowerCase(),
+                    'username': dashboard.username.value,
+                    'password': dashboard.password.value
+                },
+                success: (data) => {
+                    if (data.status === 'success') {
+                        notify('Success', 'You have successfully changed your settings.', 2000);
+                    } else if (data.status === 'error') {
+                        notify('Error', data.message, 2000);
+                    }
+                },
+                error: (data) => {
+                    if (data.responseText)
+                        notify('Error', data.responseText, 2000);
+                    else
+                        notify('Error', 'Something went wrong.', 2000);
+                }
+            });
+        }
+    },
+    'tagChangeEvent': () => {
+        let url_tag = window.location.hash.substr(1);
+        if (url_tag === 'settings') {
+            dashboard.setViewVisible(dashboard.settings);
+            dashboard.setViewInvisible(dashboard.dashboard);
+        } else {
+            dashboard.setViewVisible(dashboard.dashboard);
+            dashboard.setViewInvisible(dashboard.settings);
+        }
+    },
+    'isViewHidden': (view) => {
+        return view.style.display === 'none';
+    },
+    'setViewVisible': (view) => {
+        view.style.display = 'block';
+    },
+    'setViewInvisible': (view) => {
+        view.style.display = 'none';
+    },
+    'settings_close_click': () => {
+        dashboard.setViewVisible(dashboard.dashboard);
+        dashboard.setViewInvisible(dashboard.settings);
+        window.location.hash = '';
+    },
+    'isValidUsername': () => {
+        return RegExp(/^[a-zA-Z0-9_]{3,20}$/).test(dashboard.username.value);
+    },
+    'isValidPassword': () => {
+        return RegExp(/^[a-zA-Z0-9!@#$*()=]{6,}$/).test(dashboard.password.value);
+    },
+    'isAllowedToChangeSettings': () => {
+        return dashboard.isValidUsername() && dashboard.isValidPassword();
+    },
+    'onLogout': () => {
+        localStorage.removeItem('token');
+        window.location.href = '/logout';
+    },
+    'deleteAllFiles': () => {
+        $.ajax({
+            url: '/api/v1/files/delete_all',
+            type: 'POST',
+            headers: {
+                'Authorization': 'Bearer ' + localStorage.getItem('token')
+            },
+            data: {
+                'id': dashboard.account_id.value.toLowerCase()
+            },
+            success: (data) => {
+                if (data.status === 'success') {
+                    notify('Success', 'You have successfully deleted all files.', 2000);
+                } else if (data.status === 'error') {
+                    notify('Error', data.message, 2000);
+                }
+            },
+            error: (data) => {
+                if (data.responseText)
+                    notify('Error', data.responseText, 2000);
+                else
+                    notify('Error', 'Something went wrong.', 2000);
+            }
+        });
+    },
+    'onDeleteAllFiles': () => {
+        if (confirm('Are you sure you want to delete all files? you can\'t undo this operation!') === true) {
+            dashboard.deleteAllFiles();
+        }
+    }
+}
+
 function login() {
     if (user_login.isValidUsername()) {
         if (user_login.isValidPassword()) {
@@ -186,6 +297,18 @@ function upload() {
     }
 }
 
+function change_settings() {
+    if (dashboard.isValidUsername()) {
+        if (dashboard.isValidPassword()) {
+            dashboard.change_settings();
+        } else {
+            notify("Error", "Password is not valid", 3000);
+        }
+    } else {
+        notify("Error", "Username is not valid.", 3000);
+    }
+}
+
 function eventListenerSetup() {
     if (user_login.login_btn) {
         user_login.login_btn.addEventListener('click', login);
@@ -197,6 +320,16 @@ function eventListenerSetup() {
         file_upload.upload_btn.disabled = true;
         file_upload.file.addEventListener('change', file_upload.fileUploadChange);
         file_upload.upload_btn.addEventListener('click', upload);
+    }
+    if (dashboard.settings_close_btn) {
+        dashboard.tagChangeEvent();
+        window.addEventListener('popstate', function(event) {
+            dashboard.tagChangeEvent();
+        });
+        dashboard.settings_close_btn.addEventListener('click', dashboard.settings_close_click);
+        dashboard.change_settings_btn.addEventListener('click', change_settings);
+        dashboard.logout.addEventListener('click', dashboard.onLogout);
+        dashboard.delete_all_files.addEventListener('click', dashboard.onDeleteAllFiles);
     }
 }
 

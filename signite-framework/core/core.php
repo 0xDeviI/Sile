@@ -463,6 +463,9 @@ class SigniteRouter {
                                 if ($requestedMethod == "store") {
                                     echo $controller->store($this->_request);
                                 }
+                                else if ($requestedMethod == "update") {
+                                    echo $controller->update($this->_request, $this->_request->get("id"));
+                                }
                             }
                             else {
                                 if (method_exists($controller, $requestedMethod)) {
@@ -506,6 +509,9 @@ class SigniteRouter {
                             if ($requestedMethod == "store") {
                                 echo $controller->store($this->_request);
                             }
+                            else if ($requestedMethod == "update") {
+                                echo $controller->store($this->_request, $$this->_request->get("id"));
+                            }
                         }
                         else {
                             if (method_exists($controller, $requestedMethod)) {
@@ -542,6 +548,9 @@ class SigniteRouter {
                             if (in_array($requestedMethod, $this->_controllerResourceMethods)) {
                                 if ($requestedMethod == "store") {
                                     echo $controller->store($this->_request);
+                                }
+                                else if ($requestedMethod == "update") {
+                                    echo $controller->store($this->_request, $$this->_request->get("id"));
                                 }
                             }
                             else {
@@ -584,6 +593,9 @@ class SigniteRouter {
                         if (in_array($requestedMethod, $this->_controllerResourceMethods)) {
                             if ($requestedMethod == "store") {
                                 echo $controller->store($this->_request);
+                            }
+                            else if ($requestedMethod == "update") {
+                                echo $controller->store($this->_request, $$this->_request->get("id"));
                             }
                         }
                         else {
@@ -724,6 +736,13 @@ class SigniteRoute {
             }
         }
         return $middlewareResult !== null ? $middlewareResult : $middlewareRunResult == true;
+    }
+
+    public function middlewares(array $middlewares): SigniteRoute {
+        foreach ($middlewares as $middleware) {
+            $this->middleware($middleware[0], $middleware[1]);
+        }
+        return $this;
     }
 
     public function middleware($middleware, $onMiddlewareFailed = null): SigniteRoute|Exception {

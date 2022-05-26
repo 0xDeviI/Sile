@@ -20,9 +20,17 @@ $app->route("/api/v1/user/login",
     "UserController@login", 
     "POST")->middleware("SafePostRequest");
 
-$app->route("/api/v1/file/upload", 
+$app->route("/api/v1/files/upload", 
     "FileController@upload", 
     "POST")->middleware("SafeFileUpload", true);
+
+$app->route("/api/v1/files/delete_all", 
+    "FileController@deleteAll", 
+    "POST")->middleware("SafePostRequest")->middleware("CanChangeSettings", true);
+
+$app->route("/api/v1/user/change_settings",
+    "UserController@update",
+    "POST")->middleware("SafePostRequest")->middleware("CanChangeSettings", true);
 
 // Frontend Routes
 $app->route("/", "HomeController", "GET")->middleware("IsLoggedIn", true);

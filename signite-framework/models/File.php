@@ -14,12 +14,18 @@ class File {
     private $id;
     private $realFile;
     private $password;
+    private $ownerId;
     
-    public function __construct($id = "", $realFile, $password, $db) {
+    public function __construct($id = "", $realFile, $password, $ownerId, $db) {
         $this->db = $db;
         $this->id = $id === "" ? Identifier::uuid4() : Validity::safeMysqlInput($id, $db);
         $this->realFile = Validity::safeMysqlInput($realFile, $db);
+        $this->ownerId = $ownerId;
         $this->password = $password;
+    }
+
+    public function getOwnerId() {
+        return $this->ownerId;
     }
 
     public function getHashedPassword() {
