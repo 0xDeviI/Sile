@@ -17,7 +17,7 @@ class Validity {
         }
     
         public static function isValidPassword($password) {
-            return preg_match("/^[a-zA-Z0-9_]{1,20}$/", $password);
+            return preg_match("/^[a-zA-Z0-9!@#$*()=]{6,}$/", $password);
         }
     
         public static function isValidName($name) {

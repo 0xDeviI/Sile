@@ -5,11 +5,14 @@ namespace Signite\Core;
 require_once "signite-framework/modules/MiddlewareTool.php";
 require_once "signite-framework/config/Config.php";
 require_once "signite-framework/Modules/MiddlewareResult.php";
+require_once "signite-framework/core/HelperFunctions.php";
 require "signite-framework/utils/whoops/vendor/autoload.php";
 
 
 use Signite\Modules\SigniteMiddlewareTool;
 use Signite\Modules\MiddlewareResult;
+use function Signite\Core\view;
+use function Signite\Core\response;
 
 use Whoops\Run;
 use Whoops\Handler\PrettyPageHandler;
@@ -22,6 +25,7 @@ class Signite {
     private $_config = array();
     private $_applicationName;
     private $_applicationConfig;
+    private SigniteRouter $_router;
 
     public function __construct($applicationName) {
         $this->_applicationName = $applicationName;
@@ -32,10 +36,21 @@ class Signite {
     }
 
     public function initializeApplication() {
+        // initialize router
+        $this->_router = new SigniteRouter($this);
+
+        // initialize database
         require_once "signite-framework/database/connection.php";
-        $db = $GLOBALS["connection"];
-        $db = $db->connect();
+        $db = $GLOBALS["connection"]->connect();
         return true;
+    }
+
+    public function route($uri, Closure|string $method, string|array $callback) {
+        return $this->_router->route($uri, $method, $callback);
+    }
+
+    public function run() {
+        $this->_router->run();
     }
 
     public function redirect($url) {
@@ -43,11 +58,11 @@ class Signite {
         exit();
     }
 
-    public function setApplicationDirectoryVisibility($isVisibility, SigniteRouter &$router) {
+    public function setApplicationDirectoryVisibility($isVisibility) {
         if ($isVisibility)
-            $router->setAllowedPathAccess($this->getFreshApplicationName() . "/*");
+            $this->_router->setAllowedPathAccess($this->getFreshApplicationName() . "/*");
         else
-            $router->setDeniedPathAccess($this->getFreshApplicationName() . "/*");
+            $this->_router->setDeniedPathAccess($this->getFreshApplicationName() . "/*");
     }
 
     private function getFreshApplicationName(){
@@ -94,15 +109,11 @@ class Signite {
 }
 
 class StatusError {
-    private $_signiteRender;
 
-    public function __construct(SigniteRender $signiteRender) {
-        $this->_signiteRender = $signiteRender;
-    }
-
-    public function throw($errorView){
+    public static function throw($errorView){
         echo view($errorView["view"], $errorView["params"]);
     }
+    
 }
 
 class SigniteRouter {
@@ -116,8 +127,6 @@ class SigniteRouter {
     private $_deniedPathesAccess = array();
     private $_config = array();
     private $_paramRegex = "/\{([a-zA-Z0-9_]+)\}/";
-    private $_signiteRender;
-    private StatusError $_statusError;
     private SigniteRequest $_request;
     private $_specialPages = array(
         "explorer" => "signite-framework/pages/explorer.php",
@@ -131,21 +140,24 @@ class SigniteRouter {
             "view" => "signite-framework/pages/errors/status-code-error.php"
         ]
     );
+    private $_controllerResourceMethods = [
+        "index",
+        "create",
+        "store",
+        "show",
+        "edit",
+        "update",
+        "destroy"
+    ];
 
     public function __construct(Signite $signiteApp)
     {
         $this->_signiteApp = $signiteApp;
-        $this->_signiteRender = new SigniteRender();
-        $this->initializeObjects();
         $this->readConfig();
         $this->configurePathesAccess();
         $this->setWhoopsErrorHandler();
         $this->makeRoutesGlobal();
         session_start();
-    }
-
-    private function initializeObjects(){
-        $this->_statusError = new StatusError($this->_signiteRender);
     }
 
     public function getSpecialPages($pageKey){
@@ -348,11 +360,6 @@ class SigniteRouter {
         $this->parsePath();
     }
 
-    private function initializeDatabase() {
-        require_once "signite-framework/database/connection.php";
-        $db = $GLOBALS["connection"]->connect();
-    }
-
     private function parsePath(): string {
         // extract path without query string
         $this->_requested_url = $_SERVER["REQUEST_URI"];
@@ -434,7 +441,6 @@ class SigniteRouter {
 
     public function run(){
         $this->parseRequest();
-        $this->initializeDatabase(); // need review
         $paramableRouteExistResult = $this->checkParamableRouteExist($this->_requested_path);
         if ($this->checkRouteExists($this->_requested_path)) {
             if ($this->isRouteHaveMiddleware(md5($this->_requested_path))) {
@@ -453,9 +459,20 @@ class SigniteRouter {
                             $requestedMethod = $separated[1];
                             require_once "signite-framework/controllers/$requestedController.php";
                             eval('$controller = new $requestedController($this->_signiteApp);');
-                            if ($requestedMethod == "store") {
-                                echo $controller->store($this->_request);
+                            if (in_array($requestedMethod, $this->_controllerResourceMethods)) {
+                                if ($requestedMethod == "store") {
+                                    echo $controller->store($this->_request);
+                                }
                             }
+                            else {
+                                if (method_exists($controller, $requestedMethod)) {
+                                    echo $controller->$requestedMethod($this->_request);
+                                }
+                                else {
+                                    throw new \Exception("Method $requestedMethod not found in $requestedController");
+                                }
+                            }
+                            
                         }
                     }
                     else {
@@ -468,7 +485,7 @@ class SigniteRouter {
                 }
                 else {
                     $errorView = $this->getSpecialPages("404");
-                    $this->_statusError->throw($errorView);
+                    StatusError::throw($errorView);
                 }
             }
             else {
@@ -485,8 +502,18 @@ class SigniteRouter {
                         $requestedMethod = $separated[1];
                         require_once "signite-framework/controllers/$requestedController.php";
                         eval('$controller = new $requestedController($this->_signiteApp);');
-                        if ($requestedMethod == "store") {
-                            echo $controller->store($this->_request);
+                        if (in_array($requestedMethod, $this->_controllerResourceMethods)) {
+                            if ($requestedMethod == "store") {
+                                echo $controller->store($this->_request);
+                            }
+                        }
+                        else {
+                            if (method_exists($controller, $requestedMethod)) {
+                                echo $controller->$requestedMethod($this->_request);
+                            }
+                            else {
+                                throw new \Exception("Method $requestedMethod not found in $requestedController");
+                            }
                         }
                     }
                 }
@@ -512,8 +539,18 @@ class SigniteRouter {
                             $requestedMethod = $separated[1];
                             require_once "signite-framework/controllers/$requestedController.php";
                             eval('$controller = new $requestedController($this->_signiteApp);');
-                            if ($requestedMethod == "store") {
-                                echo $controller->store($this->_request);
+                            if (in_array($requestedMethod, $this->_controllerResourceMethods)) {
+                                if ($requestedMethod == "store") {
+                                    echo $controller->store($this->_request);
+                                }
+                            }
+                            else {
+                                if (method_exists($controller, $requestedMethod)) {
+                                    echo $controller->$requestedMethod($this->_request);
+                                }
+                                else {
+                                    throw new \Exception("Method $requestedMethod not found in $requestedController");
+                                }
                             }
                         }
                     }
@@ -527,7 +564,7 @@ class SigniteRouter {
                 }
                 else {
                     $errorView = $this->getSpecialPages("404");
-                    $this->_statusError->throw($errorView);
+                    StatusError::throw($errorView);
                 }
             }
             else {
@@ -544,8 +581,18 @@ class SigniteRouter {
                         $requestedMethod = $separated[1];
                         require_once "signite-framework/controllers/$requestedController.php";
                         eval('$controller = new $requestedController($this->_signiteApp);');
-                        if ($requestedMethod == "store") {
-                            echo $controller->store($this->_request);
+                        if (in_array($requestedMethod, $this->_controllerResourceMethods)) {
+                            if ($requestedMethod == "store") {
+                                echo $controller->store($this->_request);
+                            }
+                        }
+                        else {
+                            if (method_exists($controller, $requestedMethod)) {
+                                echo $controller->$requestedMethod($this->_request);
+                            }
+                            else {
+                                throw new \Exception("Method $requestedMethod not found in $requestedController");
+                            }
                         }
                     }
                 }
@@ -574,7 +621,7 @@ class SigniteRouter {
             }
             else{
                 $errorView = $this->getSpecialPages("404");
-                $this->_statusError->throw($errorView);
+                StatusError::throw($errorView);
             }
         }
     }
@@ -656,7 +703,8 @@ class SigniteRoute {
         foreach ($this->_middlewares as $middleware) {
             if ($middlewareTool->isMiddlewareExist($middleware["middleware"])) {
                 $loadedMiddleware = $middlewareTool->loadMiddleware($middleware["middleware"]);
-                $result = json_decode($loadedMiddleware->handle()->getResult(), true);
+                $handledResult = $loadedMiddleware->handle();
+                $result = json_decode($handledResult->getResult(), true);
                 if (!$result["success"]){
                     $middlewareRunResult = false;
                     if ($middleware["onMiddlewareFailed"] !== null){
@@ -665,7 +713,7 @@ class SigniteRoute {
                             $result["success"],
                             $result["message"],
                             $result["data"],
-                            $middleware["onMiddlewareFailed"]
+                            $handledResult->getOnMiddlewareFailed()
                         );
                     }
                     break;
@@ -767,6 +815,13 @@ class SigniteRequest {
     public function getRequestedParams(): array {
         return $this->_requested_params;
     }
+
+    public function get($key) {
+        if (isset($this->_requested_params[$key])) {
+            return $this->_requested_params[$key];
+        }
+        return null;
+    }
 }
 
 class SigniteResponse {
@@ -774,8 +829,9 @@ class SigniteResponse {
     private $_data;
     private $_headers;
 
-    public function __construct($status, $data, $headers = array()) {
+    public function __construct($status = null, $data = null, $headers = array()) {
         $this->_status = $status;
+        $this->setStatus($status);
         $this->_data = $data;
         $this->_headers = $headers;
     }
@@ -783,10 +839,8 @@ class SigniteResponse {
     public function __toString()
     {
         // encode json in json
-        return json_encode([
-            "status" => $this->_status,
-            "data" => $this->_data
-        ], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+        return json_encode($this->_data
+        , JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
     }
 
     public function json() {
@@ -829,10 +883,6 @@ class SigniteResponse {
             $this->setHeader($headers[$i]["header"], $headers[$i]["value"]);
         }
         return $this;
-    }
-
-    public function send() {
-        echo $this;
     }
 
     public function redirect($url) {

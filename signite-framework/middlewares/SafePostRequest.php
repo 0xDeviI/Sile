@@ -16,6 +16,6 @@ class SafePostRequest {
     public function handle(): MiddlewareResult
     {
         Security::safePost();
-        return new MiddlewareResult($this::class, true, "post request is safe.", null);
+        return new MiddlewareResult($this::class, true, "post request is safe.");
     }
 }

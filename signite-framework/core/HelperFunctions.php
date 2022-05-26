@@ -10,7 +10,7 @@ function view($path, $data = array(), $useApplicationPath = false) {
     return $signiteRender->render($path, $data, $useApplicationPath);
 }
 
-function response($status, $data, $headers = array()) {
+function response($status = null, $data = null, $headers = array()) {
     $signiteResponse = new SigniteResponse($status, $data, $headers);
     return $signiteResponse;
 }

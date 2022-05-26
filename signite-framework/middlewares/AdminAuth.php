@@ -2,17 +2,17 @@
 
 require_once "signite-framework/modules/MiddlewareResult.php";
 require_once "signite-framework/modules/Security.php";
+require_once "signite-framework/modules/Session.php";
 
 use Signite\Modules\MiddlewareResult;
 use Signite\Modules\Security;
+use function Signite\Modules\initializeSession;
 
 class AdminAuth {
 
     public function __construct()
     {
-        if (session_status() == PHP_SESSION_NONE) {
-            session_start();
-        }
+        initializeSession();
     }
 
     public function handle(): MiddlewareResult
@@ -27,6 +27,6 @@ class AdminAuth {
         && $isJWTExist && $isAdmin;
 
         return new MiddlewareResult($this::class, $result, 
-            $result ? "admin logged in." : "You need to get logged in to use service.", null);
+            $result ? "admin logged in." : "You need to get logged in to use service.");
     }
 }

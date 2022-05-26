@@ -1,30 +1,29 @@
 <?php
 
 require_once "signite-framework/core/core.php";
-
 use Signite\Core\Signite;
-use Signite\Core\SigniteRouter;
 
-// definitation
-$signiteApp = new Signite("sile");
-$router = new SigniteRouter($signiteApp);
+// definition
+$app = new Signite("sile");
 
 // configuration
-$signiteApp->setApplicationConfig("favicon", $signiteApp->getApplicationName() . "/resources/images/favicon.png");
-$signiteApp->setApplicationDirectoryVisibility(false, $router);
-$signiteApp->setTimeZone("Asia/Tehran");
+$app->setApplicationConfig("favicon", $app->getApplicationName() . "/resources/images/favicon.png");
+$app->setApplicationDirectoryVisibility(false);
+$app->setTimeZone("Asia/Tehran");
 
 // API Routes
-$router->route("/api/v1/user/register", "UserController@store", "GET")->middleware("SafePostRequest");
+$app->route("/api/v1/user/register", 
+    "UserController@store", 
+    "POST")->middleware("SafePostRequest");
+
+$app->route("/api/v1/user/login", 
+    "UserController@login", 
+    "POST")->middleware("SafePostRequest");
 
 // Frontend Routes
-$router->route('/', "LoginController", "GET");
-$router->route("/register", "RegisterController", "GET");
-$router->route("/logout", "LogoutController", "GET");
+$app->route("/", "HomeController", "GET")->middleware("IsLoggedIn", true);
+$app->route("/login", "LoginController", "GET")->middleware("IsNotLoggedIn", true);
+$app->route("/register", "RegisterController", "GET");
+$app->route("/logout", "LogoutController", "GET");
 
-$router->route('/test', function() {
-    return "hello world";
-}, "GET");
-
-
-$router->run();
+$app->run();

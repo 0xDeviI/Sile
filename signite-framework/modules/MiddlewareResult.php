@@ -9,7 +9,7 @@ class MiddlewareResult {
     private $_data;
     private $_onMiddlewareFailed;
 
-    public function __construct($middlewareName, $success, $message, $data, $onMiddlewareFailed = null) {
+    public function __construct($middlewareName, $success, $message, $data = null, $onMiddlewareFailed = null) {
         $this->_success = $success;
         $this->_message = $message;
         $this->_data = $data;

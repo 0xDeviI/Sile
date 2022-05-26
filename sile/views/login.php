@@ -22,7 +22,7 @@ $favIcon = "{{favicon}}";
 <body>
     <div class="login-form">
         <div class="login-form-header">
-            <h1 class="form-title">{{application_name}} register</h1>
+            <h1 class="form-title">{{application_name}} login</h1>
         </div>
         <div class="login-form-body">
             <div>
@@ -35,14 +35,10 @@ $favIcon = "{{favicon}}";
                     <input type="password" name="password" id="password" class="form-control" placeholder="Password">
                 </div>
                 <div class="form-group">
-                    <label for="confirm_password">Confirm password</label>
-                    <input type="password" name="confirm_password" id="confirm_password" class="form-control" placeholder="Confirm password">
+                    <button id="login_btn" type="button" class="btn btn-primary form-control mt20">Login</button>
                 </div>
                 <div class="form-group">
-                    <button id="register_btn" type="button" class="btn btn-primary form-control mt20">Register new account</button>
-                </div>
-                <div class="form-group">
-                    <p class="text-center mt40">Already registerd? <a href="/">Login now</a></p>
+                    <p class="text-center mt40">Don't have an account? <a href="/register">Register new one</a></p>
                 </div>
             </div>
         </div>
