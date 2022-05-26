@@ -7,6 +7,7 @@ $favIcon = "{{favicon}}";
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -17,8 +18,23 @@ $favIcon = "{{favicon}}";
     <title>{{page_title}}</title>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
 </head>
+
 <body>
     <h2>Dashboard</h2>
     <p>Welcome to dashboard. Here you can upload your files.</p>
+    <div class="upload">
+        <div class="upload-box">
+            <div class="upload-form">
+                <div class="upload-stuff">
+                    <p>Click in this area to select a file.</p>
+                    <button type="submit" class="btn btn-primary w120 upload-btn" name="submit">Upload</button>
+                </div>
+                <input class="upload-input" type="file" name="file" id="file">
+            </div>
+        </div>
+    </div>
+    <h2>Files</h2>
+    <p>Here you can find all files uploaded by you.</p>
 </body>
+
 </html>

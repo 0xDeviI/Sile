@@ -1653,3 +1653,72 @@ span.close {
     justify-content: flex-end;
     align-items: center;
 }
+
+button.btn.w120 {
+    width: 120px;
+}
+
+.upload {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.upload-box {
+    width: 70%;
+    height: 150px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 20px;
+    background-color: var(--modal-footer-background);
+    border-radius: 5px;
+    box-shadow: 0 0 2px #000;
+    border: 2px dashed var(--primary);
+}
+
+
+/*
+    upload input should be hidden and fill the parent, custom button should be on the upload input
+*/
+
+.upload-input {
+    width: 100%;
+    height: 100%;
+    cursor: pointer;
+    margin: 0;
+    padding: 0;
+    opacity: 0;
+}
+
+.upload-form {
+    width: 100%;
+    height: 100%;
+}
+
+.upload-input::-webkit-file-upload-button {
+    visibility: hidden;
+}
+
+button.btn.upload-btn {
+    width: 100%;
+    background-color: var(--primary);
+    color: var(--white);
+    border: none;
+    border-radius: 5px;
+    padding: 10px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.upload-stuff {
+    position: absolute;
+    z-index: 1;
+}
+
+.upload-form {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
