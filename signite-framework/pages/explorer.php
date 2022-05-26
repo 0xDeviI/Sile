@@ -1,6 +1,6 @@
 <?php
 
-require_once "signite-framework/modules/pathtool.php";
+require_once "signite-framework/modules/PathTool.php";
 
 use function Signite\Modules\getDirectoriesInDirectory;
 use function Signite\Modules\getFilesInDirectory;

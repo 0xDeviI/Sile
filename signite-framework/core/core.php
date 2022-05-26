@@ -1,17 +1,14 @@
 <?php
 
-
 namespace Signite\Core;
 
-require_once "signite-framework/modules/middleware-tool.php";
-require_once "signite-framework/config/config.php";
-require_once "signite-framework/Modules/middleware-result.php";
+
+require_once "signite-framework/modules/MiddlewareTool.php";
+require_once "signite-framework/config/Config.php";
+require_once "signite-framework/Modules/MiddlewareResult.php";
 require "signite-framework/utils/whoops/vendor/autoload.php";
 
 
-use Signite\Middleware;
-use Signite\Middleware\Auth;
-use Signite\Modules;
 use Signite\Modules\SigniteMiddlewareTool;
 use Signite\Modules\MiddlewareResult;
 
@@ -105,7 +102,7 @@ class StatusError {
     }
 
     public function throw($errorView){
-        echo $this->_signiteRender->render($errorView["view"], $errorView["params"]);
+        echo view($errorView["view"], $errorView["params"]);
     }
 }
 
@@ -122,6 +119,7 @@ class SigniteRouter {
     private $_paramRegex = "/\{([a-zA-Z0-9_]+)\}/";
     private $_signiteRender;
     private StatusError $_statusError;
+    private SigniteRequest $_request;
     private $_specialPages = array(
         "explorer" => "signite-framework/pages/explorer.php",
         "404" => [
@@ -218,7 +216,7 @@ class SigniteRouter {
             $path = $parentPath . ($route->getPath() == '/' ? "" : $route->getPath());
             $paths = $this->getRequestedPaths($parentPath . $route->getPath());
             $pathId = $this->generatePathId($paths);
-            $newRoute = new SigniteRoute($path, $methods, $route->getCallback(), $pathId, $paths, $route->getMiddlewares());
+            $newRoute = new SigniteRoute($path, $methods, $route->getCallback(), $pathId, $paths, $route->getMiddlewares(), false, false); // need review
             $this->objectRoute($newRoute);
         }
     }
@@ -234,7 +232,7 @@ class SigniteRouter {
         $paths = $this->getRequestedPaths($path);
         $pathId = $this->generatePathId($paths);
         $route = new SigniteRoute($path, is_array($method) ? $method : explode("|", $method), 
-        $callback, $pathId, $paths, []);
+        $callback, $pathId, $paths, [], false, false);
         return $route;
     }
 
@@ -247,30 +245,14 @@ class SigniteRouter {
             $paths = $this->getRequestedPaths($path);
             $pathId = $this->generatePathId($paths);
             $this->_routes[$pathId] = new SigniteRoute($path, is_array($method) ? $method : explode("|", $method), 
-            function() use ($callback) {
-                // check @ in callback
-                if (strpos($callback, "@") !== false) {
-                    $separated = explode("@", $callback);
-                    $requestedController = $separated[0];
-                    $requestedMethod = $separated[1];
-                    require_once "signite-framework/controllers/$requestedController.php";
-                    eval('$controller = new $requestedController($this->_signiteApp);');
-                    eval('$controller->$requestedMethod();');   
-                }
-                else {
-                    $requestedController = $callback;
-                    require_once "signite-framework/controllers/$requestedController.php";
-                    eval('$controller = new $requestedController($this->_signiteApp);');
-                    $controller->__invoke();
-                }
-            }, $pathId, $paths, []);
+            $callback, $pathId, $paths, [], true, !strpos($callback, "@"));
             return $this->_routes[$pathId];
         }
         else {
             $paths = $this->getRequestedPaths($path);
             $pathId = $this->generatePathId($paths);
             $this->_routes[$pathId] = new SigniteRoute($path, is_array($method) ? $method : explode("|", $method), 
-            $callback, $pathId, $paths, []);
+            $callback, $pathId, $paths, [], false, false);
             return $this->_routes[$pathId];
         }
     }
@@ -362,17 +344,16 @@ class SigniteRouter {
         return false;
     }
 
+    private function parseRequest() {
+        $this->_request = new SigniteRequest();
+        $this->parsePath();
+    }
+
     private function parsePath(): string {
         // extract path without query string
         $this->_requested_url = $_SERVER["REQUEST_URI"];
         $this->_requested_path = parse_url($this->_requested_url, PHP_URL_PATH);
         return $this->_requested_path;
-    }
-
-    private function getFirstPath(): string {
-        $path = $this->parsePath();
-        $path = explode("/", $path);
-        return $path[1];
     }
 
     public function getPathId($path): string {
@@ -448,14 +429,34 @@ class SigniteRouter {
     }
 
     public function run(){
-        $this->parsePath();
+        $this->parseRequest();
         $paramableRouteExistResult = $this->checkParamableRouteExist($this->_requested_path);
         if ($this->checkRouteExists($this->_requested_path)) {
             if ($this->isRouteHaveMiddleware(md5($this->_requested_path))) {
                 $result = $this->_routes[md5($this->_requested_path)]->runMiddlewares();
                 if ($result === true){
-                    $result = $this->_routes[md5($this->_requested_path)]->callback();
-                    echo $result;
+                    if ($this->_routes[md5($this->_requested_path)]->isControllerBased()) {
+                        if ($this->_routes[md5($this->_requested_path)]->isInvokableControllerBased()) {
+                            $requestedController = $this->_routes[md5($this->_requested_path)]->getCallback();
+                            require_once "signite-framework/controllers/$requestedController.php";
+                            eval('$controller = new $requestedController($this->_signiteApp);');
+                            echo $controller->__invoke();
+                        }
+                        else {
+                            $separated = explode("@", $this->_routes[md5($this->_requested_path)]->getCallback());
+                            $requestedController = $separated[0];
+                            $requestedMethod = $separated[1];
+                            require_once "signite-framework/controllers/$requestedController.php";
+                            eval('$controller = new $requestedController($this->_signiteApp);');
+                            if ($requestedMethod == "store") {
+                                echo $controller->store($this->_request);
+                            }
+                        }
+                    }
+                    else {
+                        $result = $this->_routes[md5($this->_requested_path)]->callback();
+                        echo $result;
+                    }
                 }
                 else if ($result instanceof MiddlewareResult){
                     echo $result->getOnMiddlewareFailed()();
@@ -466,15 +467,55 @@ class SigniteRouter {
                 }
             }
             else {
-                $result = $this->_routes[md5($this->_requested_path)]->callback();
-                echo $result;
+                if ($this->_routes[md5($this->_requested_path)]->isControllerBased()) {
+                    if ($this->_routes[md5($this->_requested_path)]->isInvokableControllerBased()) {
+                        $requestedController = $this->_routes[md5($this->_requested_path)]->getCallback();
+                        require_once "signite-framework/controllers/$requestedController.php";
+                        eval('$controller = new $requestedController($this->_signiteApp);');
+                        echo $controller->__invoke();
+                    }
+                    else {
+                        $separated = explode("@", $this->_routes[md5($this->_requested_path)]->getCallback());
+                        $requestedController = $separated[0];
+                        $requestedMethod = $separated[1];
+                        require_once "signite-framework/controllers/$requestedController.php";
+                        eval('$controller = new $requestedController($this->_signiteApp);');
+                        if ($requestedMethod == "store") {
+                            echo $controller->store($this->_request);
+                        }
+                    }
+                }
+                else {
+                    $result = $this->_routes[md5($this->_requested_path)]->callback();
+                    echo $result;
+                }
             }
         } else if ($paramableRouteExistResult !== false){
             if ($this->isRouteHaveMiddleware($paramableRouteExistResult["pathId"])) {
                 $result = $this->_routes[$paramableRouteExistResult["pathId"]]->runMiddlewares();
                 if ($result === true){
-                    $result = $this->_routes[$paramableRouteExistResult["pathId"]]->callback($paramableRouteExistResult["routePathsParams"]);
-                    echo $result;
+                    if ($this->_routes[$paramableRouteExistResult["pathId"]]->isControllerBased()) {
+                        if ($this->_routes[$paramableRouteExistResult["pathId"]]->isInvokableControllerBased()) {
+                            $requestedController = $this->_routes[$paramableRouteExistResult["pathId"]]->getCallback();
+                            require_once "signite-framework/controllers/$requestedController.php";
+                            eval('$controller = new $requestedController($this->_signiteApp);');
+                            echo $controller->__invoke();
+                        }
+                        else {
+                            $separated = explode("@", $this->_routes[$paramableRouteExistResult["pathId"]]->getCallback());
+                            $requestedController = $separated[0];
+                            $requestedMethod = $separated[1];
+                            require_once "signite-framework/controllers/$requestedController.php";
+                            eval('$controller = new $requestedController($this->_signiteApp);');
+                            if ($requestedMethod == "store") {
+                                echo $controller->store($this->_request);
+                            }
+                        }
+                    }
+                    else {
+                        $result = $this->_routes[$paramableRouteExistResult["pathId"]]->callback($paramableRouteExistResult["routePathsParams"]);
+                        echo $result;
+                    }
                 }
                 else if ($result instanceof MiddlewareResult){
                     echo $result->getOnMiddlewareFailed()();
@@ -485,8 +526,28 @@ class SigniteRouter {
                 }
             }
             else {
-                $result = $this->_routes[$paramableRouteExistResult["pathId"]]->callback($paramableRouteExistResult["routePathsParams"]);
-                echo $result;
+                if ($this->_routes[$paramableRouteExistResult["pathId"]]->isControllerBased()) {
+                    if ($this->_routes[$paramableRouteExistResult["pathId"]]->isInvokableControllerBased()) {
+                        $requestedController = $this->_routes[$paramableRouteExistResult["pathId"]]->getCallback();
+                        require_once "signite-framework/controllers/$requestedController.php";
+                        eval('$controller = new $requestedController($this->_signiteApp);');
+                        echo $controller->__invoke();
+                    }
+                    else {
+                        $separated = explode("@", $this->_routes[$paramableRouteExistResult["pathId"]]->getCallback());
+                        $requestedController = $separated[0];
+                        $requestedMethod = $separated[1];
+                        require_once "signite-framework/controllers/$requestedController.php";
+                        eval('$controller = new $requestedController($this->_signiteApp);');
+                        if ($requestedMethod == "store") {
+                            echo $controller->store($this->_request);
+                        }
+                    }
+                }
+                else {
+                    $result = $this->_routes[$paramableRouteExistResult["pathId"]]->callback($paramableRouteExistResult["routePathsParams"]);
+                    echo $result;
+                }
             }
         } else {
             if ($this->isPathAccessAllowed($this->_requested_path)
@@ -497,7 +558,7 @@ class SigniteRouter {
                         header("Location: " . $this->_requested_url);
                     }
                     else{
-                        echo $this->_signiteRender->render("signite-framework/pages/explorer.php", [
+                        echo view("signite-framework/pages/explorer.php", [
                             "filePath" => substr($this->_requested_path, 1),
                             "directoryToSearch" => substr($this->_requested_path, 1)
                         ]);
@@ -521,14 +582,18 @@ class SigniteRoute {
     private $_id;
     private $_paths;
     private $_middlewares;
+    private bool $_isControllerBased;
+    private bool $_isInvokableControllerBased;
 
-    public function __construct($path, $method, $callback, $id, $paths, $middlewares) {
+    public function __construct($path, $method, $callback, $id, $paths, $middlewares, $isControllerBased, $isInvokableControllerBased) {
         $this->_path = $path;
         $this->_method = $method;
         $this->_callback = $callback;
         $this->_id = $id;
         $this->_paths = $paths;
         $this->_middlewares = $middlewares;
+        $this->_isControllerBased = $isControllerBased;
+        $this->_isInvokableControllerBased = $isInvokableControllerBased;
     }
 
     public function getPath(): string {
@@ -551,7 +616,7 @@ class SigniteRoute {
         return $this->getCallback()($params);
     }
 
-    public function getCallback(): callable {
+    public function getCallback(): callable|string {
         return $this->_callback;
     }
 
@@ -569,6 +634,14 @@ class SigniteRoute {
 
     public function addMiddleware($middleware){
         array_push($this->_middlewares, $middleware);
+    }
+
+    public function isControllerBased(): bool {
+        return $this->_isControllerBased;
+    }
+
+    public function isInvokableControllerBased(): bool {
+        return $this->_isInvokableControllerBased;
     }
 
     public function runMiddlewares(): MiddlewareResult|bool|Exception {
@@ -651,7 +724,139 @@ class SigniteRender {
     }
 }
 
-function view($path, $data = array(), $useApplicationPath = false) {
-    $signiteRender = new SigniteRender();
-    return $signiteRender->render($path, $data, $useApplicationPath);
+class SigniteRequest {
+    private $_requested_url;
+    private $_requested_path;
+    private $_requested_method;
+    private $_requested_params;
+
+    public function __construct() {
+        $this->_requested_url = $_SERVER["REQUEST_URI"];
+        $this->_requested_path = substr($this->_requested_url, 1);
+        $this->_requested_method = $_SERVER["REQUEST_METHOD"];
+        $this->_requested_params = $_REQUEST;
+    }
+
+    public function __toString()
+    {
+        return json_encode([
+            "requested_url" => $this->_requested_url,
+            "requested_path" => $this->_requested_path,
+            "requested_method" => $this->_requested_method,
+            "requested_params" => $this->_requested_params
+        ], JSON_UNESCAPED_UNICODE);
+    }
+
+    public function getRequestedUrl(): string {
+        return $this->_requested_url;
+    }
+
+    public function getRequestedPath(): string {
+        return $this->_requested_path;
+    }
+
+    public function getRequestedMethod(): string {
+        return $this->_requested_method;
+    }
+
+    public function getRequestedParams(): array {
+        return $this->_requested_params;
+    }
+}
+
+class SigniteResponse {
+    private $_status;
+    private $_data;
+    private $_headers;
+
+    public function __construct($status, $data, $headers = array()) {
+        $this->_status = $status;
+        $this->_data = $data;
+        $this->_headers = $headers;
+    }
+
+    public function __toString()
+    {
+        // encode json in json
+        return json_encode([
+            "status" => $this->_status,
+            "data" => $this->_data
+        ], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+    }
+
+    public function json() {
+        header("Content-Type: application/json");
+        return $this;
+    }
+
+    public function getStatus(): int {
+        return $this->_status;
+    }
+
+    public function getData(): array {
+        return $this->_data;
+    }
+
+    public function setStatus($status) {
+        $this->_status = $status;
+        http_response_code($status);
+        return $this;
+    }
+
+    public function setData($data) {
+        $this->_data = $data;
+        return $this;
+    }
+
+    public function getHeaders(): array {
+        return $this->_headers;
+    }
+
+    public function setHeader($header, $value) {
+        $this->_headers[$header] = $value;
+        header($header . ": " . $value);
+        return $this;
+    }
+
+    public function setHeaders($headers) {
+        $this->_headers = $headers;
+        for ($i = 0; $i < count($headers); $i++) {
+            $this->setHeader($headers[$i]["header"], $headers[$i]["value"]);
+        }
+        return $this;
+    }
+
+    public function send() {
+        echo $this;
+    }
+
+    public function redirect($url) {
+        header("Location: $url");
+    }
+
+    public function redirectTo($url) {
+        $this->redirect($url);
+    }
+
+    public function redirectToRoute($route, $params = array()) {
+        $this->redirect($this->getRouteUrl($route, $params));
+    }
+
+    public function getRouteUrl($route, $params = array()) {
+        $route = $GLOBALS["routes"][$route];
+        $url = $route["path"];
+        foreach ($params as $key => $value) {
+            $url = str_replace("{{{$key}}}", $value, $url);
+        }
+        return $url;
+    }
+
+    public function getRoutePath($route, $params = array()) {
+        return $this->getRouteUrl($route, $params);
+    }
+
+    public function getRouteMethod($route, $params = array()) {
+        return $GLOBALS["routes"][$route]["method"];
+    }
+
 }

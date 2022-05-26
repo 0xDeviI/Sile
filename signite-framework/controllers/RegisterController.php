@@ -1,8 +1,9 @@
 <?php
 
 require_once "signite-framework/core/core.php";
-require_once "signite-framework/modules/validity.php";
+require_once "signite-framework/modules/Validity.php";
 require_once "signite-framework/models/User.php";
+require_once "signite-framework/core/HelperFunctions.php";
 
 use Signite\Core\Signite;
 use Signite\Modules\Validity;
@@ -25,26 +26,6 @@ class RegisterController {
                 "page_title" => "Sile - register an account"
         ], true);
     }
-
-    // public static function create() {
-
-    // }
-
-    // public function store($data) {
-
-    // }
-
-    // public function show($id) {
-
-    // }
-
-    // public function edit($id) {
-
-    // }
-
-    // public function update($id, $data) {
-
-    // }
 
 }
 

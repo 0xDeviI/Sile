@@ -1,6 +1,7 @@
 <?php
 
 require_once "signite-framework/core/core.php";
+require_once "signite-framework/core/HelperFunctions.php";
 
 use Signite\Core\Signite;
 use function Signite\Core\view;

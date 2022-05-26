@@ -15,12 +15,16 @@ $signiteApp->setApplicationDirectoryVisibility(false, $router);
 $signiteApp->setTimeZone("Asia/Tehran");
 
 // API Routes
-$router->route("/api/v1/user/register", "UserController@store", "POST")->middleware("SafePostRequest");
+$router->route("/api/v1/user/register", "UserController@store", "GET")->middleware("SafePostRequest");
 
 // Frontend Routes
-$router->route("/", "LoginController", "GET");
+$router->route('/', "LoginController", "GET");
 $router->route("/register", "RegisterController", "GET");
 $router->route("/logout", "LogoutController", "GET");
+
+$router->route('/test', function() {
+    return "hello world";
+}, "GET");
 
 
 $router->run();

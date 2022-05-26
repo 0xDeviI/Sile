@@ -2,10 +2,10 @@
 
 namespace Signite\Models;
 
-require_once "signite-framework/modules/validity.php";
-require_once "signite-framework/modules/security.php";
-require_once "signite-framework/modules/session.php";
-require_once "signite-framework/modules/identifier.php";
+require_once "signite-framework/modules/Validity.php";
+require_once "signite-framework/modules/Security.php";
+require_once "signite-framework/modules/Session.php";
+require_once "signite-framework/modules/Identifier.php";
 
 use Signite\Modules\Validity;
 use Signite\Modules\Security;

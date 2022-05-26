@@ -1,6 +1,6 @@
 <?php
 
-require_once "signite-framework/modules/mysql-utill.php";
+require_once "signite-framework/modules/MysqlUtill.php";
 
 use Signite\Modules\MYSQL_Util;
 use Signite\Modules\Table;
