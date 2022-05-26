@@ -2,7 +2,6 @@
 
 namespace Signite\Core;
 
-
 require_once "signite-framework/modules/MiddlewareTool.php";
 require_once "signite-framework/config/Config.php";
 require_once "signite-framework/Modules/MiddlewareResult.php";
@@ -349,6 +348,11 @@ class SigniteRouter {
         $this->parsePath();
     }
 
+    private function initializeDatabase() {
+        require_once "signite-framework/database/connection.php";
+        $db = $GLOBALS["connection"]->connect();
+    }
+
     private function parsePath(): string {
         // extract path without query string
         $this->_requested_url = $_SERVER["REQUEST_URI"];
@@ -430,6 +434,7 @@ class SigniteRouter {
 
     public function run(){
         $this->parseRequest();
+        $this->initializeDatabase(); // need review
         $paramableRouteExistResult = $this->checkParamableRouteExist($this->_requested_path);
         if ($this->checkRouteExists($this->_requested_path)) {
             if ($this->isRouteHaveMiddleware(md5($this->_requested_path))) {
