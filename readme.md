@@ -33,6 +33,7 @@ Install the requirements and then clone this repo.
 ```sh
 git clone https://github.com/0xDeviI/Sile.git
 ```
+After that navigate to `signite-framework/database/connection.php` and change your database configuration.
 move sile files to your apache root path and check out 127.0.0.1, That's it!
 
 
