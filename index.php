@@ -11,6 +11,7 @@ $app = new Signite("sile");
 
 // configuration
 $app->setApplicationConfig("favicon", $app->getApplicationName() . "/resources/images/favicon.png");
+$app->setApplicationConfig("PaymentsCommissionPercentage", 0.1);
 $app->setApplicationDirectoryVisibility(false);
 $app->setTimeZone("Asia/Tehran");
 
