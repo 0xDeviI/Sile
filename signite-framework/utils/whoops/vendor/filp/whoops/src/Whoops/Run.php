@@ -224,7 +224,7 @@ final class Run implements RunInterface
     }
 
     /**
-     * Silence particular errors in particular files.
+     * silence particular errors in particular files.
      *
      * @param array|string $patterns List or a single regex pattern to match.
      * @param int          $levels   Defaults to E_STRICT | E_DEPRECATED.
@@ -254,7 +254,7 @@ final class Run implements RunInterface
      *
      * @return array
      */
-    public function getSilenceErrorsInPaths()
+    public function getsilenceErrorsInPaths()
     {
         return $this->silencedPatterns;
     }

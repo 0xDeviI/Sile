@@ -23,7 +23,7 @@ class RegisterController {
         return view("register.php", [
                 "application_name" => $this->_signiteApp->getApplicationName(),
                 "favicon" => $this->_signiteApp->getApplicationConfig("favicon"),
-                "page_title" => "Sile - register an account"
+                "page_title" => "sile - register an account"
         ], true);
     }
 

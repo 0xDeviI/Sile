@@ -29,6 +29,7 @@
     --success: #30be30;
     --success-darker: #247d24;
     --modal-footer-background: #2f3136;
+    --modal-footer-background-darker: #1c1f23;
     --select-arrow: url("data:image/svg+xml;charset=utf-8,%3C?xml version='1.0' encoding='utf-8'?%3E %3Csvg version='1.1' xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' height='62.5' width='116.9' fill='%23161f27'%3E %3Cpath d='M115.3,1.6 C113.7,0 111.1,0 109.5,1.6 L58.5,52.7 L7.4,1.6 C5.8,0 3.2,0 1.6,1.6 C0,3.2 0,5.8 1.6,7.4 L55.5,61.3 C56.3,62.1 57.3,62.5 58.4,62.5 C59.4,62.5 60.5,62.1 61.3,61.3 L115.2,7.4 C116.9,5.8 116.9,3.2 115.3,1.6Z'/%3E %3C/svg%3E")
 }
 
@@ -1693,7 +1694,7 @@ button.btn.w120 {
     cursor: pointer;
     margin: 0;
     padding: 0;
-    opacity: 0;
+    color: transparent;
 }
 
 .upload-form {
@@ -1703,6 +1704,10 @@ button.btn.w120 {
 
 .upload-input::-webkit-file-upload-button {
     visibility: hidden;
+}
+
+.upload-input:hover {
+    background-color: var(--modal-footer-background-darker);
 }
 
 button.btn.upload-btn {
@@ -1783,4 +1788,119 @@ li.header-element {
 
 .bold-text {
     font-weight: bold;
+}
+
+.table-id {
+    width: 30px;
+}
+
+input[type="checkbox"].checkbox {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    margin: 0;
+    padding: 0;
+    cursor: pointer;
+    border: 1px solid var(--primary);
+    border-radius: 5px;
+}
+
+input[type="checkbox"].checkbox:checked {
+    /* background-color: var(--primary); */
+    content: url('../images/sile-check.png');
+    border: 1px solid var(--primary);
+}
+
+
+/* The switch - the box around the slider */
+
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 52px;
+    height: 25px;
+}
+
+
+/* Hide default HTML checkbox */
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+
+/* The slider */
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    -webkit-transition: .4s;
+    transition: .4s;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    -webkit-transition: .4s;
+    transition: .4s;
+}
+
+input:checked+.slider {
+    background-color: var(--primary-darker);
+}
+
+input:checked+.slider:before {
+    -webkit-transform: translateX(26px);
+    -ms-transform: translateX(26px);
+    transform: translateX(26px);
+}
+
+
+/* Rounded sliders */
+
+.slider.round {
+    border-radius: 34px;
+}
+
+.slider.round:before {
+    border-radius: 50%;
+}
+
+th {
+    text-align: center;
+}
+
+td {
+    text-align: center;
+}
+
+a.danger {
+    color: var(--danger);
+}
+
+.center-form {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+p.description {
+    width: 350px;
+    font-size: 13px;
+    margin-bottom: 30px;
 }

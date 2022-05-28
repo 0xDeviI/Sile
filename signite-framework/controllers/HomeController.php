@@ -19,7 +19,7 @@ class HomeController {
         return view("index.php", [
             "application_name" => $this->_signiteApp->getApplicationName(),
             "favicon" => $this->_signiteApp->getApplicationConfig("favicon"),
-            "page_title" => "Sile - simple file upload solution"
+            "page_title" => "sile - simple file upload solution"
         ], true);
     }
 

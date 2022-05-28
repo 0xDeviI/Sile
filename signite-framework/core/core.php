@@ -869,8 +869,10 @@ class SigniteResponse {
         , JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
     }
 
-    public function json() {
+    public function json($data = null) {
         header("Content-Type: application/json");
+        if ($data !== null)
+            $this->_data = $data;
         return $this;
     }
 

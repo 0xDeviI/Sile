@@ -51,75 +51,32 @@ $jwt = $_SESSION["JWT"];
                 <div class="upload-form">
                     <div class="upload-stuff">
                         <p id="file_upload_text">Click in this area to select a file.</p>
-                        <button id="upload_btn" type="button" class="btn btn-primary w120 upload-btn" name="submit">Upload</button>
+                        <button id="upload_btn" type="button" class="btn btn-primary upload-btn" name="submit">Upload</button>
                     </div>
-                    <input class="upload-input" type="file" name="file" id="file">
+                    <input class="upload-input" title="" type="file" name="file" id="file">
                 </div>
             </div>
         </div>
         <br>
         <h2>Files</h2>
         <p>Here you can find all files uploaded by you.</p>
-        <!-- <table class="file-table">
+        <table class="file-table">
             <thead>
                 <tr>
+                    <th class="table-id">#</th>
                     <th>File Name</th>
-                    <th>File Type</th>
-                    <th>File Size</th>
-                    <th>Uploaded On</th>
-                    <th>Download</th>
+                    <th>Password Protection</th>
+                    <th>Operations</th>
                 </tr>
             </thead>
-            <tbody>
-                <tr>
-                    <td>File 1</td>
-                    <td>File Type 1</td>
-                    <td>File Size 1</td>
-                    <td>Uploaded On 1</td>
-                    <td><a href="#">Download</a></td>
-                </tr>
-                <tr>
-                    <td>File 2</td>
-                    <td>File Type 2</td>
-                    <td>File Size 2</td>
-                    <td>Uploaded On 2</td>
-                    <td><a href="#">Download</a></td>
-                </tr>
-                <tr>
-                    <td>File 3</td>
-                    <td>File Type 3</td>
-                    <td>File Size 3</td>
-                    <td>Uploaded On 3</td>
-                    <td><a href="#">Download</a></td>
-                </tr>
-                <tr>
-                    <td>File 3</td>
-                    <td>File Type 3</td>
-                    <td>File Size 3</td>
-                    <td>Uploaded On 3</td>
-                    <td><a href="#">Download</a></td>
-                </tr>
-                <tr>
-                    <td>File 3</td>
-                    <td>File Type 3</td>
-                    <td>File Size 3</td>
-                    <td>Uploaded On 3</td>
-                    <td><a href="#">Download</a></td>
-                </tr>
-                <tr>
-                    <td>File 3</td>
-                    <td>File Type 3</td>
-                    <td>File Size 3</td>
-                    <td>Uploaded On 3</td>
-                    <td><a href="#">Download</a></td>
-                </tr>
+            <tbody id="tbody">
             </tbody>
-        </table> -->
+        </table>
     </div>
     <div id="settings" class="settings" hidden>
         <div class="settings-header">
-        <h2>Settings</h2>
-        <span id="settings_close_btn" class="close top-right"></span>
+            <h2>Settings</h2>
+            <span id="settings_close_btn" class="close top-right"></span>
         </div>
         <p>Here you can change your settings.</p>
         <div class="center-settings">
@@ -137,7 +94,7 @@ $jwt = $_SESSION["JWT"];
             </div>
             <div class="form-group">
                 <label for="password">Password</label>
-                <input type="text" value="<?php echo $user["password"]; ?>"  class="form-control" id="password" name="password" placeholder="Password">
+                <input type="text" value="<?php echo $user["password"]; ?>" class="form-control" id="password" name="password" placeholder="Password">
             </div>
             <br>
             <button id="change_settings_btn" type="button" class="btn btn-primary form-control bold-text">Change settings</button>

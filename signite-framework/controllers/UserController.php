@@ -8,6 +8,7 @@ require_once "signite-framework/modules/Validity.php";
 require_once "signite-framework/modules/Security.php";
 require_once "signite-framework/modules/Identifier.php";
 require_once "signite-framework/modules/Session.php";
+require_once "signite-framework/controllers/FileController.php";
 
 use Signite\Core\Signite;
 use Signite\Core\SigniteRequest;
@@ -140,6 +141,25 @@ class UserController {
 
     public function edit($id) {
         //
+    }
+
+    public function deleteAccount(SigniteRequest $request) {
+        $userId = $request->get("id");
+        $query = 'DELETE FROM users WHERE id = "' . $userId . '"';
+        $result = $this->db->query($query);
+        $file_c = new FileController($this->_signiteApp);
+        $__result = $file_c->deleteAll($request);
+        if ($result && json_decode($__result)->status == "success") {
+            return response(200, [
+                'status' => 'success',
+                'message' => 'User deleted successfully'
+            ])->json();
+        } else {
+            return response(400, [
+                'status' => 'error',
+                'message' => 'User deletion failed'
+            ])->json();
+        }
     }
 
     public function update(SigniteRequest $request, $id) {
