@@ -1,14 +1,6 @@
 # Sile
 Sile is simple file upload solution that you can easily install and run on your server. It's minimal and suitable for lightweight servers.
 
-![Login](git-resources/login.png "Login page")
-![Register](git-resources/register.png "Register page")
-![Dashboard](git-resources/dashboard.png "Dashboard page")
-![Settings](git-resources/settings.png "Settings page")
-![Download protected file](git-resources/downloading-protected-file.png "Download protected file page")
-
-
-
 - Minimal and clean coded
 - Written using signite framework which supports MVC as well
 - ✨Magic ✨
@@ -43,6 +35,14 @@ git clone https://github.com/0xDeviI/Sile.git
 ```
 move sile files to your apache root path and check out 127.0.0.1, That's it!
 
-[MIT](https://github.com/0xDeviI/Sile/blob/main/LICENSE)
 
+## Screenshots
+![Login](git-resources/login.png "Login page")
+![Register](git-resources/register.png "Register page")
+![Dashboard](git-resources/dashboard.png "Dashboard page")
+![Settings](git-resources/settings.png "Settings page")
+![Download protected file](git-resources/downloading-protected-file.png "Download protected file page")
+
+## License
+[MIT](https://github.com/0xDeviI/Sile/blob/main/LICENSE)
 **Free Software, Hell Yeah!**
