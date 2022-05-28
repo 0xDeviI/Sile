@@ -164,6 +164,8 @@ let dashboard = {
     'delete_account': document.getElementById('delete_account'),
     'logout': document.getElementById('logout'),
     'tbody': document.getElementById('tbody'),
+    'run_action': document.getElementById('run_action'),
+    'group_action_select': document.getElementById('group_action_select'),
     'change_settings': () => {
         if (dashboard.isAllowedToChangeSettings()) {
             $.ajax({
@@ -293,6 +295,8 @@ let dashboard = {
             dashboard.deleteAccount();
         }
     },
+    'selectedFiles': [],
+    'forceSelectActions': ["DOWNLOAD_SELECTEDS_ONLY", "SET_PASSWORD", "REMOVE_PASSWORD", "DELETE"],
     'getAllFiles': () => {
         $.ajax({
             url: '/api/v1/files/',
@@ -307,14 +311,12 @@ let dashboard = {
                 if (data.status === 'success') {
                     var files = data.data;
                     files.forEach(element => {
-                        var fileSplit = element.realFile.split("/");
-                        var fileName = fileSplit[fileSplit.length - 1];
                         dashboard.tbody.innerHTML += `
-                        <tr id="${element.id}">
+                        <tr class="file" id="${element.id}">
                             <td>
                                 <input class="checkbox" type="checkbox" name="file_select_${element.id}" id="file_select_${element.id}">
                             </td>
-                            <td>${fileName}</td>
+                            <td>${element.fileName}</td>
                             <td>
                                 <label class="switch">
                                     <input id="check_${element.id}" type="checkbox" ${element.password !== "" ? "checked" : ""}>
@@ -358,6 +360,13 @@ let dashboard = {
                                 } else {
                                     e.target.checked = true;
                                 }
+                            }
+                        });
+                        document.getElementById(`file_select_${element.id}`).addEventListener('change', (e) => {
+                            if (e.target.checked) {
+                                dashboard.selectedFiles.push(element.id);
+                            } else {
+                                dashboard.selectedFiles.splice(dashboard.selectedFiles.indexOf(element.id), 1);
                             }
                         });
                     });
@@ -462,6 +471,236 @@ let dashboard = {
                     notify('Error', 'Something went wrong.', 2000);
             }
         });
+    },
+    'getCurrentAction': () => {
+        return dashboard.group_action_select.options[dashboard.group_action_select.selectedIndex].value;
+    },
+    'groupActionRun': (action) => {
+        if (dashboard.isAllowedToRunGroupAction()) {
+            var forceAction = dashboard.forceSelectActions.indexOf(action) !== -1;
+            if (forceAction !== false) {
+                if (dashboard.isMultipleFilesSelected()) {
+                    if (action === "SET_PASSWORD") {
+                        var password = prompt('Enter password to protect files.');
+                        if (password !== null) {
+                            var confirmPassword = prompt('Confirm password to protect files.');
+                            if (password.length != 0 && password === confirmPassword) {
+                                $.ajax({
+                                    url: '/api/v1/files/group/protect',
+                                    type: 'POST',
+                                    headers: {
+                                        'Authorization': 'Bearer ' + localStorage.getItem('token')
+                                    },
+                                    data: {
+                                        'password': password,
+                                        'files': JSON.stringify(dashboard.selectedFiles)
+                                    },
+                                    success: (data) => {
+                                        if (data.status === 'success') {
+                                            dashboard.selectedFiles.forEach(element => {
+                                                var check = document.getElementById(`check_${element}`);
+                                                check.checked = true;
+                                            });
+                                            dashboard.deselectFiles();
+                                            notify('Success', 'You have successfully protected the files.', 2000);
+                                        }
+                                    },
+                                    error: (data) => {
+                                        if (data.responseText)
+                                            notify('Error', data.responseText, 2000);
+                                        else
+                                            notify('Error', 'Something went wrong.', 2000);
+                                    }
+                                });
+                            } else {
+                                notify('Error', 'Passwords do not match.', 2000);
+                            }
+                        }
+                    } else if (action === "REMOVE_PASSWORD") {
+                        if (confirm('Are you sure you want to remove password protection for selected files?') === true) {
+                            $.ajax({
+                                url: '/api/v1/files/group/unprotect',
+                                type: 'POST',
+                                headers: {
+                                    'Authorization': 'Bearer ' + localStorage.getItem('token')
+                                },
+                                data: {
+                                    'files': JSON.stringify(dashboard.selectedFiles)
+                                },
+                                success: (data) => {
+                                    if (data.status === 'success') {
+                                        dashboard.selectedFiles.forEach(element => {
+                                            var check = document.getElementById(`check_${element}`);
+                                            check.checked = false;
+                                        });
+                                        dashboard.deselectFiles();
+                                        notify('Success', 'You have successfully unprotected the files.', 2000);
+                                    }
+                                },
+                                error: (data) => {
+                                    if (data.responseText)
+                                        notify('Error', data.responseText, 2000);
+                                    else
+                                        notify('Error', 'Something went wrong.', 2000);
+                                }
+                            });
+                        }
+                    } else if (action === "DELETE") {
+                        if (confirm('Are you sure you want to delete selected files?') === true) {
+                            $.ajax({
+                                url: '/api/v1/files/group/delete',
+                                type: 'POST',
+                                headers: {
+                                    'Authorization': 'Bearer ' + localStorage.getItem('token')
+                                },
+                                data: {
+                                    'files': JSON.stringify(dashboard.selectedFiles)
+                                },
+                                success: (data) => {
+                                    if (data.status === 'success') {
+                                        dashboard.selectedFiles.forEach(element => {
+                                            var file = document.getElementById(element);
+                                            file.remove();
+                                        });
+                                        dashboard.deselectFiles();
+                                        notify('Success', 'You have successfully deleted the files.', 2000);
+                                    }
+                                },
+                                error: (data) => {
+                                    if (data.responseText)
+                                        notify('Error', data.responseText, 2000);
+                                    else
+                                        notify('Error', 'Something went wrong.', 2000);
+                                }
+                            });
+                        }
+                    } else if (action === "DOWNLOAD_SELECTEDS_ONLY") {
+                        dashboard.selectedFiles.forEach(element => {
+                            window.open(`/api/v1/files/download/${element}`, '_blank');
+                        });
+                    }
+                }
+            } else {
+                if (action === "SELECT_ALL") {
+                    dashboard.selectAllFiles();
+                } else if (action === "DESELECT_ALL") {
+                    dashboard.deselectFiles();
+                } else if (action === "SELECT_PASS_ONLY") {
+                    dashboard.selectPasswordProtectedsOnly();
+                } else if (action === "DESELECT_PASS_ONLY") {
+                    dashboard.deselectPasswordProtectedsOnly();
+                } else if (action === "SELECT_NOTPASS_ONLY") {
+                    dashboard.selectNotPasswordProtectedsOnly();
+                } else if (action === "DESELECT_NOTPASS_ONLY") {
+                    dashboard.deselectNotPasswordProtectedsOnly();
+                } else if (action === "DOWNLOAD_ALL") {
+                    dashboard.downloadAllFiles();
+                } else if (action === "DOWNLOAD_PASS_ONLY") {
+                    dashboard.downloadPasswordProtectedsFile();
+                } else if (action === "DOWNLOAD_NOT_PASS_ONLY") {
+                    dashboard.downloadNotPasswordProtectedsFile();
+                }
+            }
+        }
+    },
+    'downloadAllFiles': () => {
+        var files = document.getElementsByClassName('file');
+        for (var i = 0; i < files.length; i++) {
+            var fileId = files[i].id;
+            window.open(`/api/v1/files/download/${fileId}`, '_blank');
+        }
+    },
+    'downloadPasswordProtectedsFile': () => {
+        var files = document.getElementsByClassName('file');
+        for (var i = 0; i < files.length; i++) {
+            var fileId = files[i].id;
+            var check = document.getElementById(`check_${fileId}`);
+            if (check.checked === true) {
+                window.open(`/api/v1/files/download/${fileId}`, '_blank');
+            }
+        }
+    },
+    'downloadNotPasswordProtectedsFile': () => {
+        var files = document.getElementsByClassName('file');
+        for (var i = 0; i < files.length; i++) {
+            var fileId = files[i].id;
+            var check = document.getElementById(`check_${fileId}`);
+            if (check.checked === false) {
+                window.open(`/api/v1/files/download/${fileId}`, '_blank');
+            }
+        }
+    },
+    'selectPasswordProtectedsOnly': () => {
+        var files = document.getElementsByClassName('file');
+        for (var i = 0; i < files.length; i++) {
+            var file = files[i];
+            var id = file.id;
+            var check = document.getElementById(`check_${id}`);
+            if (check.checked === true) {
+                var fileSelect = document.getElementById(`file_select_${id}`);
+                fileSelect.checked = true;
+            }
+        }
+    },
+    'deselectPasswordProtectedsOnly': () => {
+        var files = document.getElementsByClassName('file');
+        for (var i = 0; i < files.length; i++) {
+            var file = files[i];
+            var id = file.id;
+            var check = document.getElementById(`check_${id}`);
+            if (check.checked === true) {
+                var fileSelect = document.getElementById(`file_select_${id}`);
+                fileSelect.checked = false;
+            }
+        }
+    },
+    'selectNotPasswordProtectedsOnly': () => {
+        var files = document.getElementsByClassName('file');
+        for (var i = 0; i < files.length; i++) {
+            var file = files[i];
+            var id = file.id;
+            var check = document.getElementById(`check_${id}`);
+            if (check.checked === false) {
+                var fileSelect = document.getElementById(`file_select_${id}`);
+                fileSelect.checked = true;
+            }
+        }
+    },
+    'deselectNotPasswordProtectedsOnly': () => {
+        var files = document.getElementsByClassName('file');
+        for (var i = 0; i < files.length; i++) {
+            var file = files[i];
+            var id = file.id;
+            var check = document.getElementById(`check_${id}`);
+            if (check.checked === false) {
+                var fileSelect = document.getElementById(`file_select_${id}`);
+                fileSelect.checked = false;
+            }
+        }
+    },
+    'selectAllFiles': () => {
+        var files = document.getElementsByClassName('file');
+        for (var i = 0; i < files.length; i++) {
+            var check = document.getElementById(`file_select_${files[i].id}`);
+            if (check.checked === false) {
+                check.checked = true;
+                dashboard.selectedFiles.push(files[i].id);
+            }
+        }
+    },
+    'deselectFiles': () => {
+        dashboard.selectedFiles.forEach(element => {
+            var fileSelect = document.getElementById(`file_select_${element}`);
+            if (fileSelect !== null)
+                fileSelect.checked = false;
+        });
+        dashboard.selectedFiles = [];
+    },
+    'isAllowedToRunGroupAction': () => {
+        return dashboard.getCurrentAction() !== "#";
+    },
+    'isMultipleFilesSelected': () => {
+        return dashboard.selectedFiles.length > 0;
     }
 }
 
@@ -487,7 +726,6 @@ let lock_screen = {
                 },
                 success: (data) => {
                     if (data.status === 'success') {
-                        // lock_screen.downloadFileUsingToken(data.download_token);
                         lock_screen.password.value = '';
                         lock_screen.unlock_file_btn.classList.remove('btn-primary');
                         lock_screen.unlock_file_btn.classList.add('btn-success');
@@ -502,7 +740,6 @@ let lock_screen = {
                     }
                 },
                 error: (data) => {
-                    console.log(data);
                     if (data.responseText)
                         notify('Error', data.responseText, 2000);
                     else
@@ -512,30 +749,6 @@ let lock_screen = {
         } else {
             notify('Error', 'Please enter password.', 2000);
         }
-    },
-    'downloadFileUsingToken': (token) => {
-        $.ajax({
-            url: `/api/v1/files/unlock/${token}`,
-            type: 'GET',
-            success: (data) => {
-                lock_screen.password.value = '';
-                lock_screen.password.type = 'text';
-                setTimeout(() => {
-                    lock_screen.playPasswordAnimation();
-                }, 100);
-                lock_screen.unlock_file_btn.classList.remove('btn-primary');
-                lock_screen.unlock_file_btn.classList.add('btn-success');
-                lock_screen.unlock_file_btn.innerText = 'File unlocked!';
-                lock_screen.unlock_file_btn.disabled = true;
-                notify('Success', 'You have successfully unlocked the file.', 2000);
-            },
-            error: (data) => {
-                if (data.responseText)
-                    notify('Error', data.responseText, 2000);
-                else
-                    notify('Error', 'Something went wrong.', 2000);
-            }
-        });
     },
     'stages': "x*X",
     'currentStage': 0,
@@ -596,6 +809,22 @@ function change_settings() {
     }
 }
 
+function onRunActionClicked() {
+    if (dashboard.isAllowedToRunGroupAction()) {
+        var action = dashboard.getCurrentAction();
+        var forceAction = dashboard.forceSelectActions.indexOf(action) !== -1;
+        if (forceAction !== false) {
+            if (dashboard.isMultipleFilesSelected()) {
+                dashboard.groupActionRun(action);
+            } else {
+                notify("Error", "Please select at least one file.", 3000);
+            }
+        } else {
+            dashboard.groupActionRun(action);
+        }
+    }
+}
+
 function eventListenerSetup() {
     if (user_login.login_btn) {
         user_login.login_btn.addEventListener('click', login);
@@ -618,6 +847,7 @@ function eventListenerSetup() {
         dashboard.logout.addEventListener('click', dashboard.onLogout);
         dashboard.delete_all_files.addEventListener('click', dashboard.onDeleteAllFiles);
         dashboard.delete_account.addEventListener('click', dashboard.onDeleteAccount);
+        dashboard.run_action.addEventListener('click', onRunActionClicked);
         dashboard.getAllFiles();
     }
     if (lock_screen.unlock_file_btn) {

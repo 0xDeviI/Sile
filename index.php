@@ -24,13 +24,16 @@ $app->route("/api/v1/files/delete_all", "FileController@deleteAll", "POST")->mid
 $app->route("/api/v1/files", "FileController@getAllFiles", "POST")->middleware("SafePostRequest")->middleware("CanChangeSettings", true);
 $app->route("/api/v1/files/delete", "FileController@deleteFile", "POST")->middleware("SafePostRequest")->middleware("CanChangeSettings", true);
 $app->route("/api/v1/files/protect", "FileController@protectFile", "POST")->middleware("SafePostRequest")->middleware("CanChangeSettings", true);
+$app->route("/api/v1/files/group/protect", "FileController@protectFiles", "POST")->middleware("SafePostRequest")->middleware("CanChangeSettings", true);
+$app->route("/api/v1/files/group/unprotect", "FileController@unprotectFiles", "POST")->middleware("SafePostRequest")->middleware("CanChangeSettings", true);
+$app->route("/api/v1/files/group/delete", "FileController@deleteFiles", "POST")->middleware("SafePostRequest")->middleware("CanChangeSettings", true);
 $app->route("/api/v1/files/unprotect", "FileController@unprotectFile", "POST")->middleware("SafePostRequest")->middleware("CanChangeSettings", true);
 $app->route("/api/v1/files/unlock", "FileController@unlockFile", "POST")->middleware("SafePostRequest");
 $app->route("/api/v1/files/unlock/{download_token}", function($params) use ($app) {
     downloadSpecificFile($app, $params["download_token"]);
 }, "GET");
 $app->route("/api/v1/files/download/{file}", function($params) use ($app) {
-    download($app, $params["file"]);
+    return download($app, $params["file"]);
 }, "GET");
 
 // Frontend Routes

@@ -60,6 +60,28 @@ $jwt = $_SESSION["JWT"];
         <br>
         <h2>Files</h2>
         <p>Here you can find all files uploaded by you.</p>
+        <div class="horizontal-align">
+            <select name="group_action_select" id="group_action_select">
+                <option value="#">Select a group action</option>
+                <option value="#" disabled>-------- File selection --------</option>                
+                <option value="SELECT_ALL">Select all</option>
+                <option value="DESELECT_ALL">Deselect all</option>
+                <option value="SELECT_PASS_ONLY">Select password protecteds only</option>
+                <option value="DESELECT_PASS_ONLY">Deselect password protecteds only</option>
+                <option value="SELECT_NOTPASS_ONLY">Select not password protecteds only</option>
+                <option value="DESELECT_NOTPASS_ONLY">Deselect not password protecteds only</option>
+                <option value="#" disabled>-------- File download --------</option>
+                <option value="DOWNLOAD_SELECTEDS_ONLY">Download selected files</option>
+                <option value="DOWNLOAD_ALL">Download all files</option>
+                <option value="DOWNLOAD_PASS_ONLY">Download password protecteds only</option>
+                <option value="DOWNLOAD_NOT_PASS_ONLY">Download not password protecteds only</option>
+                <option value="#" disabled>-------- File operations --------</option> 
+                <option value="SET_PASSWORD">Set password</option>
+                <option value="REMOVE_PASSWORD">Remove password</option>
+                <option value="DELETE">Delete</option>
+            </select>
+            <button id="run_action" type="button" class="btn btn-white bold-text">Run action</button>
+        </div>
         <table class="file-table">
             <thead>
                 <tr>

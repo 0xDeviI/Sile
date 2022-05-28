@@ -59,19 +59,27 @@ function downloadProtectedFile($signiteApp, $fileId) {
 function download($signiteApp, $fileId, $passwordVerified = null) {
     $file = new \FileController($signiteApp);
     $_file = $file->getFile($fileId);
-    $filePath = $_file["realFile"];
-    $fileExtension = pathinfo($filePath, PATHINFO_EXTENSION);
-    $randomFileName = Identifier::uniqueFileName() . "." . $fileExtension;
-    $filePassword = $_file['password'];
-    if (strlen($filePassword) > 0 && $passwordVerified !== true)
-        return view("protected-download.php", [
-            "application_name" => $signiteApp->getApplicationName(),
-            "favicon" => $signiteApp->getApplicationConfig("favicon"),
-            "page_title" => "Sile - Download Protected File"
-        ], true);
+    if ($_file === null) {
+        return response(200, [
+            "status" => "error",
+            "message" => "File not found"
+        ])->json();
+    }
     else {
-        header("Content-disposition: attachment;filename=$randomFileName");
-        readfile($filePath);
+        $filePath = $_file["realFile"];
+        $fileExtension = pathinfo($filePath, PATHINFO_EXTENSION);
+        $randomFileName = Identifier::uniqueFileName() . "." . $fileExtension;
+        $filePassword = $_file['password'];
+        if (strlen($filePassword) > 0 && $passwordVerified !== true)
+            return view("protected-download.php", [
+                "application_name" => $signiteApp->getApplicationName(),
+                "favicon" => $signiteApp->getApplicationConfig("favicon"),
+                "page_title" => "Sile - Download Protected File"
+            ], true);
+        else {
+            header("Content-disposition: attachment;filename=$randomFileName");
+            readfile($filePath);
+        }
     }
 }
 

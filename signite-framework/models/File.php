@@ -13,15 +13,21 @@ use Signite\Modules\Security;
 class File {
     private $id;
     private $realFile;
+    private $fileName;
     private $password;
     private $ownerId;
     
-    public function __construct($id = "", $realFile, $password, $ownerId, $db) {
+    public function __construct($id = "", $realFile, $fileName, $password, $ownerId, $db) {
         $this->db = $db;
         $this->id = $id === "" ? Identifier::uuid4() : Validity::safeMysqlInput($id, $db);
         $this->realFile = Validity::safeMysqlInput($realFile, $db);
+        $this->fileName = Validity::safeMysqlInput($fileName, $db);
         $this->ownerId = $ownerId;
         $this->password = $password;
+    }
+
+    public function getFileName() {
+        return $this->fileName;
     }
 
     public function getOwnerId() {

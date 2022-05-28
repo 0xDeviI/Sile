@@ -101,6 +101,87 @@ class FileController {
         }
     }
 
+    public function unprotectFiles(SigniteRequest $request) {
+        $files = json_decode($request->get("files"), true);
+        $_result = true;
+        for ($i = 0; $i < count($files); $i++) {
+            $id = $files[$i];
+            $query = "UPDATE files SET password = '' WHERE id = '$id'";
+            $result = $this->db->query($query);
+            if (!$result) {
+                $_result = false;
+            }
+        }
+        if ($_result) {
+            return response(200, [
+                "status" => "success",
+                "message" => "Files unprotected successfully"
+            ])->json();
+        } else {
+            return response(200, [
+                "status" => "error",
+                "message" => "There was an error unprotecting all or some of the files"
+            ])->json();
+        }
+    }
+
+    public function deleteFiles(SigniteRequest $request) {
+        $files = json_decode($request->get("files"), true);
+        $_result = true;
+        for ($i = 0; $i < count($files); $i++) {
+            $id = $files[$i];
+            $query = "SELECT * FROM files WHERE id = '$id'";
+            $result = $this->db->query($query);
+            if ($result->num_rows > 0) {
+                $filePath = $result->fetch_assoc()["realFile"];
+                $query = "DELETE FROM files WHERE id = '$id'";
+                $result = $this->db->query($query);
+                $fileRemoveResult = unlink($filePath);
+                if (!$result || !$fileRemoveResult) {
+                    $_result = false;
+                }
+            } else {
+                $_result = false;
+            }
+        }
+        if ($_result) {
+            return response(200, [
+                "status" => "success",
+                "message" => "Files deleted successfully"
+            ])->json();
+        } else {
+            return response(200, [
+                "status" => "error",
+                "message" => "There was an error deleting all or some of the files"
+            ])->json();
+        }
+    }
+
+    public function protectFiles(SigniteRequest $request) {
+        $files = json_decode($request->get("files"), true);
+        $password = $request->get("password");
+        $_result = true;
+        for ($i = 0; $i < count($files); $i++) {
+            $hashedPassword = Security::generatePasswordHash($password);
+            $query = "UPDATE files SET password = '$hashedPassword' WHERE id = '$files[$i]'";
+            $result = $this->db->query($query);
+            if (!$result) {
+                $_result = false;
+            }
+        }
+        if ($_result) {
+            return response(200, [
+                "status" => "success",
+                "message" => "Files protected successfully"
+            ])->json();
+        } else {
+            return response(200, [
+                "status" => "error",
+                "message" => "There as an error protecting all or some of the files"
+            ])->json();
+        }
+    }
+
     public function unprotectFile(SigniteRequest $request) {
         $id = $request->get("id");
         $query = "UPDATE files SET password = '' WHERE id = '$id'";
@@ -161,11 +242,11 @@ class FileController {
         $fileTmpName = $file["tmp_name"];
         $fileName = $this->_uploadPath . Identifier::uniqueFileName() . "." . $fileExtension;
         if (move_uploaded_file($fileTmpName, $fileName)) {
-            $file = new File("", $fileName, "", $request->get("id"), $this->db);
+            $file = new File("", $fileName, $file["name"], "", $request->get("id"), $this->db);
             while ($this->isFileExist($file) !== null) {
                 $file->reId();
             }
-            $query = 'INSERT INTO files (id, realFile, password, ownerId) VALUES ("' . $file->getId() . '", "' . $file->getRealFile() . '", "' . $file->getHashedPassword() . '", "' . $file->getOwnerId() . '")';
+            $query = 'INSERT INTO files (id, realFile, fileName, password, ownerId) VALUES ("' . $file->getId() . '", "' . $file->getRealFile() . '", "' . $file->getFileName() . '", "' . $file->getHashedPassword() . '", "' . $file->getOwnerId() . '")';
             $result = $this->db->query($query);
             if ($result) {
                 return response(200, [
