@@ -1,2 +1,2 @@
-# sile
+# Sile
 Simple file upload solution
