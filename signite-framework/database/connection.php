@@ -9,15 +9,15 @@ use Signite\Modules\Column;
 $_HOST = "localhost";
 $_USERNAME = "root";
 $_PASSWORD = "";
-$_DATABASE = "sile_dbstroe_IUjayP2GaL8WCvyD";
+$_DATABASE = "test_db";
 
 $connection = new MYSQL_Util($_HOST, $_USERNAME, $_PASSWORD, $_DATABASE, [
-    new Table("Users", [
+    new Table("users", [
         new Column("id", "varchar", 36, false, true, false),
         new Column("username", "varchar", 16, false, false, false),
         new Column("password", "text", 255, false, false, false)
     ]),
-    new Table("Files", [
+    new Table("files", [
         new Column("id", "varchar", 36, false, true, false),
         new Column("realFile", "text", 255, false, false, false),
         new Column("fileName", "text", 255, false, false, false),

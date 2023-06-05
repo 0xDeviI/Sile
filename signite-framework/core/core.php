@@ -4,7 +4,7 @@ namespace Signite\Core;
 
 require_once "signite-framework/modules/MiddlewareTool.php";
 require_once "signite-framework/config/Config.php";
-require_once "signite-framework/Modules/MiddlewareResult.php";
+require_once "signite-framework/modules/MiddlewareResult.php";
 require_once "signite-framework/core/HelperFunctions.php";
 require "signite-framework/utils/whoops/vendor/autoload.php";
 

@@ -13,7 +13,7 @@ use function Signite\Modules\initializeSession;
 class SafeFileUpload {
 
     private $_allowedFileExtensions = ["jpg", "jpeg", "png", "gif", "pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx", "txt", "mp3", "mp4", "avi", "mov", "wmv", "flv", "mpg", "mpeg", "zip", "rar"];
-    private $_allowedFileMimeTypes = ["image/jpeg", "image/png", "image/gif", "application/pdf", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "application/vnd.ms-excel", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "application/vnd.ms-powerpoint", "application/vnd.openxmlformats-officedocument.presentationml.presentation", "text/plain", "audio/mpeg", "video/mp4", "video/x-msvideo", "video/x-ms-wmv", "video/x-flv", "video/mpeg", "application/zip", "application/x-rar-compressed"];
+    private $_allowedFileMimeTypes = ["image/jpeg", "image/png", "image/gif", "application/pdf", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "application/vnd.ms-excel", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "application/vnd.ms-powerpoint", "application/vnd.openxmlformats-officedocument.presentationml.presentation", "text/plain", "audio/mpeg", "video/mp4", "video/x-msvideo", "video/x-ms-wmv", "video/x-flv", "video/mpeg", "application/x-rar-compressed", "application/octet-stream", "application/zip", "application/octet-stream", "application/x-zip-compressed", "multipart/x-zip"];
     private $_allowedFileSize = 20971520; // 20MB
     private $_uploadPath = "sile/uploads/";
 
